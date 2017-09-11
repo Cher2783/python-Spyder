@@ -1,0 +1,82 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Aug 10 08:26:27 2017
+
+@author: Administrator
+"""
+import requests,xlsxwriter,re
+from bs4 import BeautifulSoup
+headers = {
+    'x-newrelic-id': 'VwcPUFJXGwEBUlJSDgc=',
+    'accept-encoding': 'gzip, deflate, sdch',
+    'x-requested-with': 'XMLHttpRequest',
+    'accept-language': 'zh-CN,zh;q=0.8',
+    'user-agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36',
+    'accept': 'application/json, text/plain, */*',
+    'referer': 'https://www.appannie.com/apps/ios/app/xie-cheng-lu-xing-ding-jiu/rank-history/?vtype=day&countries=CN&device=iphone&view=rank&legends=2&date=2017-08-08~2017-09-06',
+    'authority': 'www.appannie.com',
+    'cookie': 'km_lv=x; optimizelySegments=%7B%222069170486%22%3A%22false%22%2C%222083860069%22%3A%22gc%22%2C%222083940003%22%3A%22search%22%2C%223519320656%22%3A%22none%22%7D; optimizelyBuckets=%7B%7D; rid=e03d1227c2914a34a199242a92de14b2; km_ai=1952780177%40qq.com; km_ni=1952780177%40qq.com; __guid=159515579.348271482609426900.1504695796415.6204; referrer=http://www.baidu.com/link?url=8r8cKKhr-dX2-urpG9kXy-WJzFWnYpsZqLculRF55QSKBjos8OOMK6sYPXP1KWW-&wd=&eqid=83ac83f90004ff300000000559afd5cc; aa_language=cn; django_language=zh-cn; optimizelyEndUserId=oeu1495376729762r0.8813534895889461; aa_user_token=.eJxNzLsKwjAUAFCtOjgIIrg7OpVC0khXnRQcM8ebmxsSLCkxiY9B8NNdHPyAcz7VO463cl4wP5WD5GIlN51mGrkQoutayy0j3LFWc22E5Q1nRq4UlOxUSXRTGvBKwcSJbB6kIUD_yh5TDYhDCbk-QKJjSBSSz_5O58FQv_-ZqVz8Td7E2emyXo5K_QXD9TM9:1dpYDb:AeFcTqHsqFrC-vpZb6VOKh9TYdc; sessionId=.eJxNjc1qwkAURm2MFiPiD_QJuqmb4DPUlZW6kN71eDNzwSFxksm9Y1EodFX0LXw136QIqXR3OHyH7zv68g8vMGZitqWrqGbLQk5OMGicYsFali0YKAyyVYGpVta8bZ5GLRj-jchhVpBZRhAjW7OCvpSsQmVQyPjoDJN_dYY6J2dg9kkZOiwOYjWnqHUZnKRzZFo4JsdW7J7eS0PFa1OMsKBalN6SzpXYHenbwQ2SO_g2JI_XXrc_HXeeL7o6yDFR8DFPfDxd-87P2ndD-gt-qFi-:1dpYhp:UXu1NfNo1Sxvbo7zsuIxo6cMKus; csrftoken=5ah1xRbErYy7r4zucueZ5aTkyvL41Ucv; monitor_count=9; _gat_UA-2339266-6=1; _ga=GA1.2.584711785.1495376735; _gid=GA1.2.2007262851.1504695807; _mkto_trk=id:071-QED-284&token:_mch-appannie.com-1495376735399-28433; wcs_bt=s_14249a956b4d:1504698294; __atuvc=2%7C32%2C2%7C33%2C0%7C34%2C0%7C35%2C8%7C36; __atuvs=59afdef9fc4bea03002; _tdim=182356ee-9e35-4e07-a502-276a039a6ef4; _hp2_ses_props.3646280627=%7B%22r%22%3A%22https%3A%2F%2Fwww.appannie.com%2Faccount%2Flogin%2F%3F_ref%3Dheader%22%2C%22ts%22%3A1504698084531%2C%22d%22%3A%22www.appannie.com%22%2C%22h%22%3A%22%2Fdashboard%2Fhome%2F%22%7D; _hp2_id.3646280627=%7B%22userId%22%3Anull%2C%22pageviewId%22%3A%220009366258481329%22%2C%22sessionId%22%3A%228759078347752784%22%2C%22identity%22%3A%221054048%22%2C%22trackerVersion%22%3A%223.0%22%7D',
+    'x-csrftoken': '5ah1xRbErYy7r4zucueZ5aTkyvL41Ucv',
+}
+
+"""params = (
+    ('_c', '3'),
+    ('countries', 'CN'),
+    ('start_date', '2011-07-12'),
+    ('end_date', '2017-09-07'),
+    ('d', 'iphone'),
+    ('f', 'ranks'),
+)"""
+
+
+p = requests.get('https://www.appannie.com/apps/ios/app/dong-hang-yi-donge/details/', headers=headers)"""这里在登录之后可以直接copy 到curl中就可以了
+version_html = BeautifulSoup(p.text,'html.parser')
+versin_list = version_html.find_all('h5')
+version_detail = version_html.find_all('div',{'class':'app-version-note'})
+
+count = 0
+a = []
+b = []
+g = []
+for c in versin_list:
+    #print(c)
+    count+=1
+    #print(count)
+    #print (c)
+    f = r'(.*)'
+    h = re.compile(f).findall(c.text)
+    a.append(h[0])
+    
+    
+
+    
+for d in version_detail:
+    
+    l = re.compile(r'.*')
+    e = re.findall(l,d.text)
+    g.append(e[1])
+
+Dic = []
+for i in range(0,count-1,1):
+    dic = {'版本号及发布时间':a[i],
+           
+           '更新内容':g[i]
+           
+            }
+    Dic.append(dic)
+
+workbook=xlsxwriter.Workbook('东方航空-机票预订航班查询平台'+'.xlsx')
+worksheet=workbook.add_worksheet()
+title = ["版本号及发布时间",'更新内容']
+worksheet.write_row('A1',title)
+row = 1
+col = 0
+count = 0
+for dic1 in Dic:
+    worksheet.write(row,col,dic1['版本号及发布时间'])
+    worksheet.write(row,col+1,dic1['更新内容'])
+    
+    row +=1
+    print(count)
+    count+=1
+workbook.close()
