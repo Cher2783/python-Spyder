@@ -1,0 +1,70 @@
+import json
+import xlsxwriter
+import requests
+#import re
+
+def talkingdata():
+    Dic = []
+  
+    url1 = 'http://mi.talkingdata.com/app/trend/2/allKpi.json?typeIds=19&dateType=d&startDate=2016-08-20&endDate=2017-08-20'"""这里修改APP的url，以及时间"""
+    p = requests.get(url = url1)zhe 
+    print(p.status_code)
+    name = p.json()[0]['app']['appName']
+    a = p.json()[0]['active']
+    b = p.json()[0]['activePerCoverage']
+    c = p.json()[0]['activeRate']
+    d = p.json()[0]['activeRateBenchmarkH']
+    e = p.json()[0]['activeRateBenchmarkL']
+    f = p.json()[0]['coverage']
+    g = p.json()[0]['coverageRate']
+    h = p.json()[0]['coverageRateBenchmarkH']
+    m = p.json()[0]['coverageRateBenchmarkL']
+    j = p.json()[0]['date']
+    k = p.json()[0]['ranking']
+    l = p.json()[0]['typeRanking']
+    for i in range(0,366,1):
+        dic = {
+                'active':a[i],
+                'activePerCoverage':b[i],
+                'activeRate':c[i],
+                'activeRateBenchmarkH':d[i],
+                'activeRateBenchmarkL':e[i],
+                'coverage':f[i],
+                'coverageRate':g[i],
+                'coverageRateBenchmarkH':h[i],
+                'coverageRateBenchmarkL':m[i],
+                'date':j[i],
+                'ranking':k[i],
+                'typeRanking':l[i],
+                }
+        print(i)
+        
+        Dic.append(dic)  
+    #print(Dic)
+
+    workbook=xlsxwriter.Workbook(name+'.xlsx')
+    worksheet=workbook.add_worksheet()
+    title = ["date","active","activePerCoverage","activeRate","activeRateBenchmarkH","activeRateBenchmarkL","coverage","coverageRate","coverageRateBenchmarkH","coverageRateBenchmarkL","ranking","typeRanking"]
+    worksheet.write_row('A1',title)
+    row = 1
+    col = 0
+    count = 0
+    for dic1 in Dic:
+        worksheet.write(row,col,dic1['date'])
+        worksheet.write(row,col+1,dic1['active'])
+        worksheet.write(row,col+2,dic1['activePerCoverage'])
+        worksheet.write(row,col+3,dic1['activeRate'])
+        worksheet.write(row,col+4,dic1['activeRateBenchmarkH'])
+        worksheet.write(row,col+5,dic1['activeRateBenchmarkL'])
+        worksheet.write(row,col+6,dic1['coverage'])
+        worksheet.write(row,col+7,dic1['coverageRate'])
+        worksheet.write(row,col+8,dic1['coverageRateBenchmarkH'])
+        worksheet.write(row,col+9,dic1['coverageRateBenchmarkL'])
+        worksheet.write(row,col+10,dic1['ranking'])
+        worksheet.write(row,col+11,dic1['typeRanking'])
+        row +=1
+        print(count)
+        count +=1
+    workbook.close()
+
+talkingdata()
