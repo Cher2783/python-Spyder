@@ -1,0 +1,180 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Oct  1 14:36:34 2017
+
+@author: bingchen_2783
+"""
+import json,requests,xlsxwriter
+from lxml import etree
+headers = {
+        
+        'Host':'itunes.apple.com',
+        'User-Agent':'iTunes/12.6.2 (Windows; Microsoft Windows 7 x64 Ultimate Edition Service Pack 1 (Build 7601); x64) AppleWebKit/7603.3008.0.3',
+        'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        #'Referer':'	https://search.itunes.apple.com/WebObjects/MZStore.woa/wa/search?submit=edit&mt=8&term=%E6%90%BA%E7%A8%8B',
+        'If-Modified-Since':'Thu, 21 Sep 2017 13:41:52 GMT',
+        'Accept-Language':'zh-cn',
+        'X-Apple-I-MD-RINFO':'17106176',
+        'X-Apple-Store-Front':'143465-19,32',
+        'X-Apple-Tz	':'28800',
+        'X-Apple-I-MD':'AAAABQAAABC3D88cbfVG33fWp/QUwLV2AAAAAg==',
+        'X-Apple-I-MD-M':'9NVGzDrzEcqKuuE2dYRaMZYz6wtnD0zthaIa07gT5O9TyMI8WwxdedfD2GhlgLXYlks0jfWgDvLbcG3G',
+        'Accept-Encoding':'gzip, deflate',
+        'Cookie':'groupingPillToken=1_iphone; xp_ab=1#isj11bm+4892+G6zrz2h0; xp_abc=G6zrz2h0; xp_ci=3z13E9fEz3Nlz5PpzCPSzaVUctpun; s_vi=[CS]v1|2CAE4D25850357B2-6000119D40012C11[CE]',
+        'Connection':'keep-alive'
+        }
+url = 'https://itunes.apple.com/WebObjects/MZStore.woa/wa/viewTop?id=29116'
+p = requests.get(url = url,headers = headers)
+#print(p.text)
+try:
+    html = etree.HTML(p.text)
+    json_text = html.xpath('//script/text()')[1][15:]
+except:
+    pass
+#print(json_text)
+for i in range(2,3,1):
+    all_app_id =json.loads(json_text).get('pageData').get('topChartsPageData').get('topCharts')[i].get('adamIds')
+    count =1
+    for app_id_list in all_app_id:
+        
+        url2 = 'https://itunes.apple.com/cn/app/id'+app_id_list
+        r = requests.get(url = url2,headers = headers)
+        try:
+            html1 = etree.HTML(r.text)
+            json_text1 = html1.xpath('//script/text()')[1][15:]
+        except:
+            pass
+        try:
+            app_name = json.loads(json_text1).get('storePlatformData').get('product-dv-product').get('results').get(app_id_list).get('nameSortValue')#获得APP的名字
+        except:
+            pass
+        try:
+            app_detail = json.loads(json_text1).get('storePlatformData').get('product-dv-product').get('results').get(app_id_list).get('description').get('standard')#获取APP的详细介绍
+        except:
+            pass
+        try:
+            company_name = json.loads(json_text1).get('storePlatformData').get('product-dv-product').get('results').get(app_id_list).get('artistName')#获得APP所属的企业
+        except:
+            pass
+        try:
+            released_time = json.loads(json_text1).get('storePlatformData').get('product-dv-product').get('results').get(app_id_list).get('releaseDate')#获得APP首次发布的时间
+        except:
+            pass
+        try:
+            user_rating_sorce = json.loads(json_text1).get('storePlatformData').get('product-dv-product').get('results').get(app_id_list).get('userRating').get('value')#获得APP的得分
+        except:
+            pass
+        try:
+            user_rating_num = json.loads(json_text1).get('storePlatformData').get('product-dv-product').get('results').get(app_id_list).get('userRating').get('ratingCount')#获得APP的评分人数
+        except:
+            pass
+        try:
+            user_current_rating_sorce = json.loads(json_text1).get('storePlatformData').get('product-dv-product').get('results').get(app_id_list).get('userRating').get('valueCurrentVersion')#获得APP当前版本的评分
+        except:
+            pass
+        try:
+            user_current_rating_num = json.loads(json_text1).get('storePlatformData').get('product-dv-product').get('results').get(app_id_list).get('userRating').get('ratingCountCurrentVersion')#获得APP当前版本的评分人数
+            app_subtitle = json.loads(json_text1).get('storePlatformData').get('product-dv-product').get('results').get(app_id_list).get('subtitle')#APP的标签
+            type_of_app = json.loads(json_text1).get('storePlatformData').get('product-dv-product').get('results').get(app_id_list).get('offers')[0].get('type')
+            price_of_app = json.loads(json_text1).get('storePlatformData').get('product-dv-product').get('results').get(app_id_list).get('offers')[0].get('priceFormatted')
+            app_also_buy = json.loads(json_text1).get('pageData').get('softwarePageData').get('customersAlsoBoughtApps')
+            version_history = json.loads(json_text1).get('pageData').get('softwarePageData').get('versionHistory')
+            more_app_by_this_developer = json.loads(json_text1).get('pageData').get('softwarePageData').get('moreByThisDeveloper')
+        except:
+            pass
+        
+        
+        dic = {
+                'APP的名字':app_name,
+                'APP的ID':app_id_list,
+                'APP的详细介绍':app_detail,
+                'APP所属公司':company_name,
+                'APP首次发布时间':released_time,
+                '用户总评分':user_rating_sorce,
+                '参与评分的总人数':user_rating_num,
+                '当前版本的评分':user_current_rating_sorce,
+                '当前版本评分的总人数':user_current_rating_num,
+                'APP的获得方式':type_of_app,
+                'APP的价格':price_of_app
+                }
+        workbook=xlsxwriter.Workbook(app_name+'.xlsx')
+        worksheet1=workbook.add_worksheet('基本信息')
+        title = ["项目","详细介绍"]
+        worksheet1.write_row('A1',title)
+        row = 1
+        col = 0
+        worksheet1.write(row,col,'APP的名字')
+        worksheet1.write(row,col+1,dic['APP的名字'])
+        worksheet1.write(row+1,col,'APP的ID')
+        worksheet1.write(row+1,col+1,dic['APP的ID'])
+        worksheet1.write(row+2,col,'APP的详细介绍')
+        worksheet1.write(row+2,col+1,dic['APP的详细介绍'])
+        worksheet1.write(row+3,col,'APP所属公司')
+        worksheet1.write(row+3,col+1,dic['APP所属公司'])
+        worksheet1.write(row+4,col,'APP首次发布时间')
+        worksheet1.write(row+4,col+1,dic['APP首次发布时间'])
+        worksheet1.write(row+5,col,'用户总评分')
+        worksheet1.write(row+5,col+1,dic['用户总评分'])
+        worksheet1.write(row+6,col,'参与评分的总人数')
+        worksheet1.write(row+6,col+1,dic['参与评分的总人数'])
+        worksheet1.write(row+7,col,'当前版本的评分')
+        worksheet1.write(row+7,col+1,dic['当前版本的评分'])
+        worksheet1.write(row+8,col,'当前版本评分的总人数')
+        worksheet1.write(row+8,col+1,dic['当前版本评分的总人数'])
+        worksheet1.write(row+9,col,'APP的获得方式')
+        worksheet1.write(row+9,col+1,dic['APP的获得方式'])
+        worksheet1.write(row+10,col,'APP的价格')
+        worksheet1.write(row+10,col+1,dic['APP的价格'])
+        name_list = []
+        try:
+            for app_also_buy1 in app_also_buy:
+                url3 = 'https://itunes.apple.com/lookup?id='+app_also_buy1
+                rr = requests.get(url = url3,headers = headers)
+                app_also_buy_name = rr.json()['results'][0]['trackName']
+                dic1 = {
+                        'also_buy_id':app_also_buy1,
+                        'app_also_buy_name':app_also_buy_name
+                        }
+                name_list.append(dic1)
+            worksheet2 = workbook.add_worksheet('相关产品')
+            title2 = ["alsobuyappID","alsoAPPname"]
+            worksheet2.write_row('A1',title2)
+            for name in name_list:
+                worksheet2.write(row,col,name['also_buy_id'])
+                worksheet2.write(row,col+1,name['app_also_buy_name'])
+                row+=1
+        except:
+            pass
+        worksheet3 = workbook.add_worksheet('版本历史')
+        title3 = ["版本号","发布时间","版本详情介绍"]
+        worksheet3.write_row('A1',title3)
+        row = row-15
+        for version in version_history:
+            worksheet3.write(row,col,version['versionString'])
+            worksheet3.write(row,col+1,version['releaseDate'])
+            worksheet3.write(row,col+2,version['releaseNotes'])
+            row+=1
+        alsodeveloperlist = []
+        try:
+            for moreapp in  more_app_by_this_developer:
+                url4 = 'https://itunes.apple.com/lookup?id='+moreapp
+                rrr = requests.get(url = url4,headers = headers)
+                alsodevelopename = rrr.json()['results'][0]['trackName']
+                dic2 ={'alsodevelop':moreapp,
+                       'alsodevelopename':alsodevelopename
+                       }
+                alsodeveloperlist.append(dic2)
+            row = 1
+            col = 0
+            worksheet4 = workbook.add_worksheet('开发商的更多的APP')
+            title4 = ["alsodevelopID","alsodevelopename"]
+            worksheet4.write_row('A1',title4)
+            for also in alsodeveloperlist:
+                worksheet4.write(row,col,also['alsodevelop'])
+                worksheet4.write(row,col+1,also['alsodevelopename'])
+                row+=1
+        except:
+            pass
+        print(count)
+        count+=1    
+        workbook.close()
