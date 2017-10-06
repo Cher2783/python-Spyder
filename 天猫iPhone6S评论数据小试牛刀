@@ -1,0 +1,58 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Oct  6 15:14:58 2017
+
+@author: bingchen_2783
+"""
+import json,requests,re,xlsxwriter
+url = 'https://rate.tmall.com/list_detail_rate.htm?itemId=527048515751&spuId=382711454&sellerId=268451883&order=3&currentPage=1'
+p = requests.get(url = url)
+r = r'\"rateDetail\"\:(.*)'
+p1 =  re.compile(r).findall(p.text)
+total_page = json.loads(p1[0]).get('paginator').get('lastPage')#获取评论的总页数，但是好像只能显示这么多，并且最后一页的数据无法显示。
+print(total_page)
+workbook=xlsxwriter.Workbook('iphone6s'+'.xlsx')
+worksheet=workbook.add_worksheet()
+title = ["用户名","用户等级","评论时间","手机型号","评论内容","店家回复"]
+worksheet.write_row('A1',title)
+row = 1
+col = 0
+Dic = []
+for i in range(1,total_page,1):
+    url1 = 'https://rate.tmall.com/list_detail_rate.htm?itemId=527048515751&spuId=382711454&sellerId=268451883&order=3&currentPage='+str(i)
+    p2 = requests.get(url = url1)
+    print(p2.status_code)
+    try:
+        r1 = r'\"rateDetail\"\:(.*)'
+        p3 = re.compile(r1).findall(p2.text)
+        #print(p3[0])
+        rate = json.loads(p3[0]).get('rateList')
+        #print(type(rate))
+        for ratesingle in rate:
+            Dic.append(ratesingle)
+    except:
+        print(i)
+        pass
+    
+count = 1
+for dic1 in Dic:
+    
+    
+    
+    worksheet.write(row,col,dic1['displayUserNick']) 
+   
+    
+        
+    worksheet.write(row,col+1,dic1['userVipLevel'])
+
+    
+    
+    
+    worksheet.write(row,col+2,dic1['rateDate'])
+    worksheet.write(row,col+3,dic1['auctionSku'])
+    worksheet.write(row,col+4,dic1['rateContent'])
+    worksheet.write(row,col+5,dic1['reply'])
+    row +=1
+    print(count)
+    count+=1
+workbook.close()
