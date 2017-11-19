@@ -1,0 +1,109 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Nov 17 17:44:57 2017
+
+@author: Administrator
+"""
+import requests,time,xlsxwriter
+from bs4 import BeautifulSoup
+headers = {
+        'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Encoding':'gzip, deflate, sdch',
+        'Accept-Language':'zh-CN,zh;q=0.8',
+        'Cache-Control':'max-age=0',
+        'Connection':'keep-alive',
+        'Cookie':'think_language=zh-CN; PHPSESSID=5faf7cj35rsqdb17gt949gc7b2; idss=cc; Hm_lvt_8eee4cacb173e36099ceadd434aa2376=1510910425; Hm_lpvt_8eee4cacb173e36099ceadd434aa2376=1510911162; amvid=ec014417a65138835da58a2c05df3334; tmc=14.20006308.47978479.1510910428149.1510911162423.1510911162490; tma=20006308.47978479.1510910428149.1510910428149.1510910428149.1; tmd=14.20006308.47978479.1510910428149.; fingerprint=621ec3db40a65694ffc6f89a613d00a3; bfd_s=181368062.906233558629971.1510910429493; bfd_g=87fb02420a014e170000024500031ebe58e1b8eb',
+        'Host':'www.meidebi.com',
+        'Referer':'http://www.meidebi.com/Search?keyword=%E4%BC%98%E8%A1%A3%E5%BA%93&cate=0&type=3&expire=0&ishot=0&style=2&p=2',
+        'Upgrade-Insecure-Requests':'1',
+        'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
+        
+        }
+params = (
+        ('keyword','优衣库'),
+        ('cate','0'),
+        ('type','3'),
+        ('expire','0'),
+        ('ishot','0'),
+        ('style','2'),
+        ('p','3'),
+        )
+keyword = ['优衣库','哥弟','鸭鸭','trendiano','vermoda','viishow','woog2005','波司登','布衣传说','海澜之家','韩都衣舍','九牧王','卡宾','拉夏贝尔','乐町','裂帛','骆驼','马克华菲','美特斯邦威','七匹狼','戚米','千纸鹤','森马','太平鸟','唐狮','雅戈尔','妖精的口袋','伊芙丽','衣品天成','茵曼','音儿','英爵','真维斯','hazzys','apple','华为','OPPO','vivo','小米','魅族','荣耀','三星','努比亚','8848','美图','守护宝','小辣椒','360手机','诺基亚','天语','纽曼','中兴','酷派','摩托罗拉','锤子']
+j = 1
+for key in keyword:
+    try:
+        Dic = []
+        url = 'http://www.meidebi.com/Search?keyword='+str(key)+'&cate=0&type=2&expire=0&ishot=0&style=2&p=1'#type = 2 与type= 3分别指不同的来源。3指的是天猫2指的是除天猫之外的其他国内的产品。
+        p = requests.get(url =url,headers =headers)
+        html = BeautifulSoup(p.text,'html.parser')
+        totalpage_location = html.find('div',{'class':'tag-filter clearfix'}).text
+        #print(totalpage_location)
+        totalpage_num = str(totalpage_location).split('(')[1].split(')')[0]
+        totalpage = int(int(totalpage_num)/20)
+        print('第'+str(j)+'个品牌共有'+str(totalpage)+'页')
+        for i  in range(1,int(totalpage)+2,1):
+            url1 = 'http://www.meidebi.com/Search?keyword='+str(key)+'&cate=0&type=2&expire=0&ishot=0&style=2&p='+str(i)
+            p1 = requests.get(url = url1,headers =headers)
+            print('正在请求第'+str(j)+'个品牌的第'+str(i)+'页已完成共有'+str(totalpage))
+            html_need = BeautifulSoup(p1.text,'html.parser')
+            product_list = html_need.find_all('li',{'class':'clearfix'})
+            for productlist in product_list:
+                try:
+                    title = productlist.find('div',{'class':'tit'}).text
+                    price = productlist.find('span',{'class':'red price'}).text
+                    detail = productlist.find('div',{'class':'desc'}).text
+                    #   shopurl = productlist.find('a',{'isconvert':'1'}).get('href')
+                    like = productlist.find('i',{'class':'gray6 link f-icon icon-votesp'}).text
+                    unlike = productlist.find('i',{'class':'gray6 link f-icon icon-votesm'}).text
+                    comment = productlist.find('a',{'class':'gray6 f-icon icon-comment'}).text
+                    shoucang = productlist.find('i',{'class','gray6 link f-icon icon-fav'}).text
+                    bloguser = productlist.find('div',{'class','foot clearfix'}).text
+                    blogname = str(bloguser).split('：')[1].split('2')[0]
+                    creattime = productlist.find('span',{'class':'createtime'}).text
+                    dic = {
+                            'title':title,
+                            'price':price,
+                            'detail':detail,
+                            'shopurl':shopurl,
+                            'like':like,
+                            'unlike':unlike,
+                            'comment':comment,
+                            'shoucang':shoucang,
+                            'blogname':blogname,
+                            'creattime':creattime,
+                            }
+                    Dic.append(dic)
+                except:
+                    pass
+        workbook = xlsxwriter.Workbook(str(key)+'国内'+'.xlsx')
+        worksheet = workbook.add_worksheet('基本信息')
+        title = ["标题","价格","详细描述","店铺URL","点赞数","踩","评论数","收藏数","爆料人名字","创建时间"]
+        worksheet.write_row('A1',title)
+        row = 1
+        col = 0
+        for dic1 in Dic:
+            worksheet.write(row,col,dic1['title'])
+            worksheet.write(row,col+1,dic1['price'])
+            worksheet.write(row,col+2,dic1['detail'])
+            worksheet.write(row,col+3,dic1['shopurl'])
+            worksheet.write(row,col+4,dic1['like'])
+            worksheet.write(row,col+5,dic1['unlike'])
+            worksheet.write(row,col+6,dic1['comment'])
+            worksheet.write(row,col+7,dic1['shoucang'])
+            worksheet.write(row,col+8,dic1['blogname'])
+            worksheet.write(row,col+9,dic1['creattime'])
+            row +=1
+        print('xieruchengg')
+    
+        workbook.close() 
+        j+=1
+    except:
+        pass
+
+                
+        
+    
+    
+    
+    
+    #print(p.text)
