@@ -1,0 +1,201 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Nov 10 21:14:59 2017
+
+@author: Administrator
+"""
+
+import requests
+from bs4 import BeautifulSoup
+import xlsxwriter
+import time
+cookies = {
+    'TrackID': '1yqpDBJUoF4Kc4l5mb6tEN3_tMOVfVkDXCh40ViM5FpcUllCXG4TQsLt7WGqQa6rPWt_cRw57lU2X9zKyaWAiN061J9gP8RLgPP_REwvVKOGWPbmGPTBi3FgeUq7Ahxy4',
+    'pinId': 'ommRV63mjTKwcayiVHHIOA',
+    'pin': '%E5%B0%8F%E5%B4%BD%E5%AD%9012138',
+    'unick': '%E5%B0%8F%E5%B4%BD%E5%AD%9012138',
+    '_tp': 'htio6OnWToqLEAe5jkKzZ%2FKpEUbMDSZvt9byvWd6AdNrcSutkay2Mqq1thojxFTj',
+    '_pst': '%E5%B0%8F%E5%B4%BD%E5%AD%9012138',
+    'ipLocation': '%u5317%u4EAC',
+    'areaId': '1',
+    'ipLoc-djd': '1-72-2799-0',
+    'user-key': 'db4133d0-a71a-42eb-8076-8fb263c17e52',
+    'cn': '0',
+    'unpl': 'V2_ZzNtbUBTQkdyDRFRL0pYDGJTFwkSABNHIQtGVi8dVFI0ABddclRCFXMURlRnGV0UZwYZXUpcRxNFCHZXchBYAWcCGllyBBNNIEwHDCRSBUE3XHxcFVUWF3RaTwEoSVoAYwtBDkZUFBYhW0IAKElVVTUFR21yVEMldQl2VnobWAViBxdYcmdEJUU4QFR%2fGF8HVwIiXHIVF0l3AUVTeRARB2YBFl1HU0YQRQl2Vw%3d%3d',
+    '__jdv': '122270672|baidu-pinzhuan|t_288551095_baidupinzhuan|cpc|0f3d30c8dba7459bb52f2eb5eba8ac7d_0_350c64f4eb584a4eaface213e59fb241|1510294705148',
+    'autoOpenApp_downCloseDate_auto': '1510296925228_1800000',
+    'downloadAppPlugIn_downCloseDate': '1510296943291_86400000',
+    'JSESSIONID': '3C428D3A95FD09D5AE70F2212ABA0CCE.s1',
+    'warehistory': '5716477,4787565,',
+    '3AB9D23F7A4B3C9B': 'IJXCUSRMTE63O7OJSDIVPXMI656WCQC3SOM6AAQPBUGPUBIP3LT6KG5EL3T4CJNMXZ55KXQGJD2XGUUA6ZADYQA7UQ',
+    'm_uuid_new': '2E553DB58210A5131C29829E9985AF57',
+    'abtest': '20171110151917512_35',
+    'M_Identification': '3bebcb3c8b08af15_1bb78cf4ddea032ad81c619f682eba5f',
+    'M_Identification_abtest': '20171110062608380_73299170',
+    '__jda': '122270672.303514544.1510059497.1510294700.1510294705.6',
+    '__jdb': '122270672.57.303514544|6.1510294705',
+    '__jdc': '122270672',
+    'mba_muid': '303514544',
+    'mba_sid': '15102958310002063046019488490.23',
+    '__jdu': '303514544',
+    'sid': 'c0cac5cb86f5ee73ad33cb48f0bb5b1f',
+    'USER_FLAG_CHECK': '8e5d823320db05e71b52e466cee90288',
+    'mobilev': 'html5',
+}
+
+headers = {
+    'Origin': 'http://shop.m.jd.com',
+    'Accept-Encoding': 'gzip, deflate',
+    'Accept-Language': 'zh-CN,zh;q=0.8',
+    'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1',
+    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    'Accept': 'application/json, text/javascript, */*; q=0.01',
+    'Referer': 'http://shop.m.jd.com/search/search?shopId=1000004123',
+    'X-Requested-With': 'XMLHttpRequest',
+    'Connection': 'keep-alive',
+}
+
+shopid = ['42051']#这里只需要搜集需要爬取的店铺的ID，运行即可。
+j = 1
+for shop in shopid:
+    data1 = [
+            ('shopId', str(shop)),
+            ('searchPage', '1'),
+            ('keyword', ''),
+            ('searchSort', '0'),
+            ('shopCategoryId', ''),
+            ('clickSku', ''),
+            ('skus', ''),
+            ('jdDeliver', '0'),
+            ]
+    Dic = []
+    print('done')
+    print('正在获取第'+str(j)+'个店铺总页数')
+    url = 'http://shop.m.jd.com/search/searchWareAjax.json'
+    p_ = requests.post(url =url, headers=headers,  cookies=cookies, data=data1)
+    
+    totalpage = p_.json()['results']['totalPage']
+    print('一共有'+str(totalpage)+'页')
+    for i in range(1,int(totalpage)+1,1):
+        data = [
+                ('shopId', str(shop)),
+                ('searchPage', str(i)),
+                ('keyword', ''),
+                ('searchSort', '0'),
+                ('shopCategoryId', ''),
+                ('clickSku', ''),
+                ('skus', ''),
+                ('jdDeliver', '0'),
+                ]
+        print('正在获得第'+str(j)+'个店铺的'+str(i)+'页')
+        p = requests.post(url =url, headers=headers,  cookies=cookies, data=data)
+        dic_list = p.json()['results']['wareInfo']#产品字典
+        print(p.status_code)
+        count = 1
+        for dic_ in dic_list:
+            url2 = 'https://item.m.jd.com/product/'+str(dic_['wareId'])+'.html'
+            
+            p2 = requests.get(url = url2, headers =headers,cookies =cookies)
+            time.sleep(1)
+            
+            #print('go')
+            html_need = BeautifulSoup(p2.text,'html.parser')
+            #print(html_need)
+            try:
+                title = html_need.find('div',{'class':'prod-act'}).text
+            except:
+                title ='none'
+            try:
+                whitebar = html_need.find('div',{'class':'prod-whitebar-txt'}).text
+            except:
+                whitebar = 'none'
+            a = []
+            try:
+                lable_ = html_need.find_all('div',{'class':'promotion-item item-import'})
+                for lab in lable_:
+                    lable1 = lab.find('span',{'class':'promotion-item-text'}).text
+                    a.append(lable1)
+            except:
+            
+                pass
+            b = []
+            try:
+                lable2 = html_need.find_all('div',{'class':'promotion-item item-import item-display-inline'})
+                for lab2 in lable2:
+                    lables = lab2.find('span',{'class':'promotion-item-text  promotion-item-link'}).text
+                    b.append(lables)
+            except:
+                pass
+            lables1 = ''.join(a)
+            ad = ''.join(b)
+            try:
+                service = html_need.find('div',{'class':'service-floor J_ping'}).text
+            except:
+                service = 'none'
+
+        #print(service)
+            try:
+                dingyue = html_need.find('span',{'class':'reservation-red'}).text
+            except:
+                dingyue = 'weizhi'
+            try:
+                shouhou = html_need.find('div',{'class':'warranty-wrap bdr-t'}).text
+            except:
+                shouhou = 'weizhi'
+            dic = {
+                    'wareId':dic_['wareId'],
+                    'wname':dic_['wname'],
+                    'jdPrice':dic_['jdPrice'],
+                    'mPrice':dic_['mPrice'],
+                    'good':dic_['good'],
+                    'totalCount':dic_['totalCount'],
+                    'title':title,
+                    'whitebar':whitebar,
+                    'lables1':lables1,
+                    'ad':ad,
+                    'service':service,
+                    'dingyue':dingyue,
+                    'shouhou':shouhou,
+                    }
+            print('在解析第'+str(j)+'个店铺的第'+str(i)+'页的第'+str(count)+'个商品')
+            print(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
+            count += 1
+    
+            Dic.append(dic)
+    workbook=xlsxwriter.Workbook(str(shop)+'.xlsx')
+    worksheet=workbook.add_worksheet('基本信息')
+    title = ["产品ID","产品名字","京东价格","活动价","好评率","总评数","标题","白条","活动","广告","服务","订阅数","售后服务"]
+    worksheet.write_row('A1',title)
+    row = 1
+    col = 0
+    for dic1 in Dic:
+        worksheet.write(row,col,dic1['wareId'])
+        worksheet.write(row,col+1,dic1['wname'])
+        worksheet.write(row,col+2,dic1['jdPrice'])
+        worksheet.write(row,col+3,dic1['mPrice'])
+    
+        worksheet.write(row,col+4,dic1['good'])
+        worksheet.write(row,col+5,dic1['totalCount'])
+        worksheet.write(row,col+6,dic1['title'])
+    #worksheet.write(row,col+7,dic1['gifts'])
+        worksheet.write(row,col+7,dic1['whitebar'])
+        worksheet.write(row,col+8,dic1['lables1'])
+        worksheet.write(row,col+9,dic1['ad'])
+        worksheet.write(row,col+10,dic1['service'])
+        worksheet.write(row,col+11,dic1['dingyue'])
+        worksheet.write(row,col+12,dic1['shouhou'])
+
+    
+    
+        row +=1
+    print('xieruchengg')
+    j+=1
+workbook.close()            
+        
+    
+    
+ 
+   
+    
+    
+    
