@@ -1,0 +1,6 @@
+step1：在官网下载Wordcloud whl 文件  网址为：http://www.lfd.uci.edu/~gohlke/pythonlibs/#wordcloud 
+       下载至电脑上的任意文件夹
+step2：打开anaconda的 anaconda prompt 
+step3：跟电脑cmd同样的操作进入到 wordcloud 下载所在的文件夹，
+step4：pip install xxx.whl
+step5:over!
