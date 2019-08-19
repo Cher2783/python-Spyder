@@ -1,0 +1,64 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Aug 18 11:17:39 2019
+
+@author: chenwang
+"""
+import requests,json,time,xlsxwriter #json字典格式数据的处理包；time：休眠函数，暂时没用到；xlsxwriter：Excel的读写包；
+from bs4 import BeautifulSoup #美丽汤：html格式语言的处理
+Dic = []
+headers = {
+        'accept':'*/*',
+        'accept-encoding':'gzip',
+        'accept-language':'zh-CN,zh;q=0.9',
+        'cache-control':'no-cache',
+        'cookie':'_zap=72f65bab-5f8d-474c-8180-82230e1be616; d_c0="AIAsBfKIhQ-PTuKl2Px0GxvdyNebIxHeqvM=|1559439416"; q_c1=1167a2cf97444dcc8ded1d089ab92a80|1559439417000|1559439417000; capsion_ticket="2|1:0|10:1562561488|14:capsion_ticket|44:OTYyYTA2ZTliMDAzNDcxMGEwNGM1ZTY5NzZmZDdiZTE=|55d2f362e34500a8ccea2d920cc2ce87516e423d57c0aa98067ffdcc149999c7"; z_c0="2|1:0|10:1562561539|4:z_c0|92:Mi4xY2d2WEVBQUFBQUFBZ0N3RjhvaUZEeVlBQUFCZ0FsVk5BeG9RWGdEMFVEdEdKcUlDUThkNTVpU3N2Z1hyMmRGWF9R|6458b02f2152c793f52bf469b20e51ab891adc01017f758be9e7fdb7c1107582"; _xsrf=c835e3da-759c-46e5-8b17-e8802d9a90bd; tst=r; BAIDU_SSP_lcr=https://www.baidu.com/link?url=ealvtvqrCtD_pItNJRjmrwQjR0D0ykFOHAbJqlRj9L3&wd=&eqid=f3572c230004c426000000065d3ae07f; tgw_l7_route=66cb16bc7f45da64562a077714739c11',
+        'pragma':'no-cache',
+        'referer':'https://www.zhihu.com/search?q=Mac%20WPS&utm_content=search_history&type=content',
+        'user-agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36',
+        'x-ab-param':'se_billboardsearch=0;se_famous=1;se_search_feed=N;se_whitelist=1;ug_follow_answerer_0=0;pf_noti_entry_num=0;se_go_ztext=0;se_ios_spb309=1;top_recall_deep_user=1;tp_qa_toast=1;tp_sft_v2=d;pf_fuceng=1;se_payconsult=5;top_hotcommerce=1;ug_follow_answerer=0;zr_km_style=base;tp_sticky_android=2;ug_zero_follow=0;li_se_kv=0;ls_new_upload=1;se_auto_syn=0;se_p_slideshow=0;top_new_feed=5;top_recall_exp_v1=5;zr_video_recall=current_recall;zr_article_rec_rank=new;li_android_vip=0;pf_foltopic_usernum=50;se_colorfultab=1;se_limit=0;se_page_limit_20=1;tp_qa_metacard_top=top;top_quality=0;tsp_childbillboard=2;li_qa_new_cover=0;se_likebutton=0;se_waterfall=0;se_preset_tech=0;se_zu_recommend=0;top_gr_ab=0;zr_intervene=0;top_v_album=1;ls_videoad=2;pf_feed=1;zr_km_slot_style=event_card;ug_newtag=1;li_ts_sample=old;qa_test=0;se_college_cm=1;tp_qa_metacard=1;ug_fw_answ_aut_1=0;se_college=default;se_mobileweb=1;top_ebook=0;zr_km_tag=open;li_hot_score_ab=0;soc_special=0;top_ydyq=A;tsp_lastread=0;ls_fmp4=0;se_ad_index=10;zr_search_xgb=0;ug_follow_topic_1=2;se_backsearch=0;se_ltr_v002=1;se_rr=1;se_topiclabel=0;se_topic_express=1;tp_sft=a;li_se_xgb=0;se_title_only=0;se_wannasearch=a;tp_meta_card=0;se_ltr_v012=1;se_ri=0;se_spb309=0;se_subtext=1;top_test_4_liguangyi=1;qa_answerlist_ad=0;se_expired_ob=0;se_websearch=3;top_reason=1;ug_zero_follow_0=0;zr_video_rank=new_rank;pf_creator_card=1;pf_newguide_vertical=0;se_movietab=1;top_native_answer=2;tsp_hotctr=2;se_agency= 0;zr_km_answer=open_cvr;zr_rel_search=base;se_amovietab=1;se_featured=1;se_lottery=0;soc_bignew=1;soc_bigone=1;top_recall_exp_v2=5;top_root=0;zr_ans_rec=gbrank;se_time_threshold=0;top_rank=0;li_album3_ab=0;li_ebook_detail=1;top_vipconsume=2;tp_header_style=1;se_mclick=0;se_site_onebox=0;se_topicdirect=2;se_webmajorob=0;zr_art_rec=base;se_webtimebox=1;tp_m_intro_re_topic=1;tsp_vote=1;zr_infinity_a_u=all;li_qa_cover=old;li_se_album_card=0;zr_answer_rec_cp=open;zr_video_rank_nn=new_rank;li_price_test=2;se_terminate=0;soc_update=1;li_album_liutongab=0;se_new_topic=0;se_webrs=1;top_universalebook=1;li_tjys_ec_ab=0;ug_goodcomment_0=1;se_zu_onebox=7;soc_notification=0;zr_km_xgb_model=esmm',
+        'x-api-version':'3.0.91',
+        'x-app-za':'OS=Web',
+        'x-requested-with':'fetch',
+        }#用于伪装爬虫程序，让自己更像是人在浏览，防止反爬虫机制。
+idlist = ['60907883','21940510','23811180']#list，把想要爬取的问答的ID放在这里
+for j in idlist:
+    url0 = 'https://www.zhihu.com/api/v4/questions/'+str(j)+'/answers?include=data%5B%2A%5D.is_normal%2Cadmin_closed_comment%2Creward_info%2Cis_collapsed%2Cannotation_action%2Cannotation_detail%2Ccollapse_reason%2Cis_sticky%2Ccollapsed_by%2Csuggest_edit%2Ccomment_count%2Ccan_comment%2Ccontent%2Ceditable_content%2Cvoteup_count%2Creshipment_settings%2Ccomment_permission%2Ccreated_time%2Cupdated_time%2Creview_info%2Crelevant_info%2Cquestion%2Cexcerpt%2Crelationship.is_authorized%2Cis_author%2Cvoting%2Cis_thanked%2Cis_nothelp%2Cis_labeled%2Cis_recognized%2Cpaid_info%2Cpaid_info_content%3Bdata%5B%2A%5D.mark_infos%5B%2A%5D.url%3Bdata%5B%2A%5D.author.follower_count%2Cbadge%5B%2A%5D.topics&limit=10&offset=0&platform=desktop&sort_by=default'
+    p_0 = requests.get(url = url0,headers = headers)
+    pages = p_0.json()['paging']
+    pagenum = int(pages['totals'])+10
+
+    for i in range(0,pagenum,10):
+        url = 'https://www.zhihu.com/api/v4/questions/'+str(j)+'/answers?include=data%5B%2A%5D.is_normal%2Cadmin_closed_comment%2Creward_info%2Cis_collapsed%2Cannotation_action%2Cannotation_detail%2Ccollapse_reason%2Cis_sticky%2Ccollapsed_by%2Csuggest_edit%2Ccomment_count%2Ccan_comment%2Ccontent%2Ceditable_content%2Cvoteup_count%2Creshipment_settings%2Ccomment_permission%2Ccreated_time%2Cupdated_time%2Creview_info%2Crelevant_info%2Cquestion%2Cexcerpt%2Crelationship.is_authorized%2Cis_author%2Cvoting%2Cis_thanked%2Cis_nothelp%2Cis_labeled%2Cis_recognized%2Cpaid_info%2Cpaid_info_content%3Bdata%5B%2A%5D.mark_infos%5B%2A%5D.url%3Bdata%5B%2A%5D.author.follower_count%2Cbadge%5B%2A%5D.topics&limit=10&offset='+str(i)+'&platform=desktop&sort_by=default'
+        
+        p0 = requests.get(url = url,headers = headers)
+        p = p0.json()['data']
+        for contents in p:
+            content0 = contents['content']
+            content = BeautifulSoup(content0,"html.parser").text
+            #voteup_count = contents['voteup_count']
+            #comment_count = contents['comment_count']
+            dic = {'content2':content,
+                   'voteup_count':contents['voteup_count'],
+                   'comment_count':contents['comment_count'],
+                    }
+            Dic.append(dic)
+    workbook=xlsxwriter.Workbook(str(j)+'.xlsx')
+    worksheet=workbook.add_worksheet()
+    title = ["回答",'投票数','评论数',]
+    worksheet.write_row('A1',title)
+    row = 1
+    col = 0
+    count = 0
+    for dic1 in Dic:
+        worksheet.write(row,col,dic1['content2'])
+        worksheet.write(row,col+1,dic1['voteup_count'])
+        worksheet.write(row,col+2,dic1['comment_count'])
+        
+        
+        row +=1
+        print(count)
+        count+=1
+    workbook.close()
+    
