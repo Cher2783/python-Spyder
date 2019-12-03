@@ -1,70 +1,90 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Oct 27 15:51:40 2019
+
+@author: Administrator
+"""
+
 import json
 import xlsxwriter
 import requests
+import time
 #import re
-
-def talkingdata():
-    Dic = []
-  
-    url1 = 'http://mi.talkingdata.com/app/trend/2/allKpi.json?typeIds=19&dateType=d&startDate=2016-08-20&endDate=2017-08-20'"""这里修改APP的url，以及时间"""
-    p = requests.get(url = url1)zhe 
-    print(p.status_code)
-    name = p.json()[0]['app']['appName']
-    a = p.json()[0]['active']
-    b = p.json()[0]['activePerCoverage']
-    c = p.json()[0]['activeRate']
-    d = p.json()[0]['activeRateBenchmarkH']
-    e = p.json()[0]['activeRateBenchmarkL']
-    f = p.json()[0]['coverage']
-    g = p.json()[0]['coverageRate']
-    h = p.json()[0]['coverageRateBenchmarkH']
-    m = p.json()[0]['coverageRateBenchmarkL']
-    j = p.json()[0]['date']
-    k = p.json()[0]['ranking']
-    l = p.json()[0]['typeRanking']
-    for i in range(0,366,1):
-        dic = {
-                'active':a[i],
-                'activePerCoverage':b[i],
-                'activeRate':c[i],
-                'activeRateBenchmarkH':d[i],
-                'activeRateBenchmarkL':e[i],
-                'coverage':f[i],
-                'coverageRate':g[i],
-                'coverageRateBenchmarkH':h[i],
-                'coverageRateBenchmarkL':m[i],
-                'date':j[i],
-                'ranking':k[i],
-                'typeRanking':l[i],
-                }
-        print(i)
+headers = {
+        'Accept':'application/json, text/javascript, */*; q=0.01',
+        'Accept-Encoding':'gzip, deflate',
+        'Accept-Language':'zh-CN,zh;q=0.9,en;q=0.8',
+        'Connection':'keep-alive',
+        'Content-Type':'application/json',
+        'Cookie':'xn_dvid_kf_9488=36DB8B-C5BEE55E-AB46-32A3-CAC2-DC7BCC9518AB; i18next=zh_cn; tdce=1952780177@qq.com; Hm_lvt_6b82c15e44f810b130c2eb92b0b36483=1571362164,1573542439; Hm_lpvt_6b82c15e44f810b130c2eb92b0b36483=1573542439; xn_sid_kf_9488=1573542441001625; Hm_lvt_4194ddf8a829d68afa312684b382079d=1571362194,1573542460; comment_author=a8a27d95-cd4f-49ed-90e7-464250dd5d78; tdppt=a8a27d95-cd4f-49ed-90e7-464250dd5d78; vsApp=%7B%22vsAppId%22%3A-1%2C%22vsAppName%22%3A%22%22%2C%22vsTypeId%22%3A-1%7D; Hm_lpvt_4194ddf8a829d68afa312684b382079d=1573550208; JSESSIONID=wz9xjoz4ijao19dvubzhes4qi',
+        'Host':'mi.talkingdata.com',
+        'Referer':'http://mi.talkingdata.com/app-rank.html',
+        'User-Agent':'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.97 Safari/537.36',
+        'X-Requested-With':'XMLHttpRequest',
+        }
+iddic = []
+industry = ['109000']
+#insduty = ['104000']
+for j in industry:
+    
+    
+    for i  in range(0,240,30):
+        try:
+            url = 'http://mi.talkingdata.com/rank/active.json?date=2019-09-01&typeId='+str(j)+'&dateType=m&rankingStart='+str(i)+'&rankingSize=30'
+        #time.sleep(2)
+            p = requests.get(url = url,headers = headers)
+            apprank = p.json()
+            for applist in apprank:
+                appid = applist['appId'] 
+                url1 = 'http://mi.talkingdata.com/app/trend/'+str(appid)+'/allKpi.json?typeIds='+str(j)+'&dateType=m&startDate=2017-01-01&endDate=2019-08-01'
+                p1 = requests.get(url = url1)
+                time.sleep(2)
+                appname = p1.json()[0]['app']['appName']
+                Dic = []
+                for m in range(0,32,1):
+                    dic1 = {
+                            'active':p1.json()[0]['active'][m],
+                            'activePerCoverage':p1.json()[0]['activePerCoverage'][m],
+                            'activeRate':p1.json()[0]['activeRate'][m],
+                            'activeRateBenchmarkH':p1.json()[0]['activeRateBenchmarkH'][m],
+                            'activeRateBenchmarkL':p1.json()[0]['activeRateBenchmarkL'][m],
+                            'coverage':p1.json()[0]['coverage'][m],
+                            'coverageRate':p1.json()[0]['coverageRate'][m],
+                            'coverageRateBenchmarkH':p1.json()[0]['coverageRateBenchmarkH'][m],
+                            'coverageRateBenchmarkL':p1.json()[0]['coverageRateBenchmarkL'][m],
+                            'date':p1.json()[0]['date'][m],
+                            'ranking':p1.json()[0]['ranking'][m],
+                            'typeRanking':p1.json()[0]['typeRanking'][m],
+                                    }
+                    Dic.append(dic1)
         
-        Dic.append(dic)  
-    #print(Dic)
-
-    workbook=xlsxwriter.Workbook(name+'.xlsx')
-    worksheet=workbook.add_worksheet()
-    title = ["date","active","activePerCoverage","activeRate","activeRateBenchmarkH","activeRateBenchmarkL","coverage","coverageRate","coverageRateBenchmarkH","coverageRateBenchmarkL","ranking","typeRanking"]
-    worksheet.write_row('A1',title)
-    row = 1
-    col = 0
-    count = 0
-    for dic1 in Dic:
-        worksheet.write(row,col,dic1['date'])
-        worksheet.write(row,col+1,dic1['active'])
-        worksheet.write(row,col+2,dic1['activePerCoverage'])
-        worksheet.write(row,col+3,dic1['activeRate'])
-        worksheet.write(row,col+4,dic1['activeRateBenchmarkH'])
-        worksheet.write(row,col+5,dic1['activeRateBenchmarkL'])
-        worksheet.write(row,col+6,dic1['coverage'])
-        worksheet.write(row,col+7,dic1['coverageRate'])
-        worksheet.write(row,col+8,dic1['coverageRateBenchmarkH'])
-        worksheet.write(row,col+9,dic1['coverageRateBenchmarkL'])
-        worksheet.write(row,col+10,dic1['ranking'])
-        worksheet.write(row,col+11,dic1['typeRanking'])
-        row +=1
-        print(count)
-        count +=1
-    workbook.close()
-
-talkingdata()
+            
+                workbook=xlsxwriter.Workbook(appname+'.xlsx')
+                worksheet=workbook.add_worksheet()
+                title = ["date","active","activePerCoverage","activeRate","activeRateBenchmarkH","activeRateBenchmarkL","coverage","coverageRate","coverageRateBenchmarkH","coverageRateBenchmarkL","ranking","typeRanking"]
+                worksheet.write_row('A1',title)
+                row = 1
+                col = 0
+                
+                for dic4 in Dic:
+                    worksheet.write(row,col,dic4['date'])
+                    worksheet.write(row,col+1,dic4['active'])
+                    worksheet.write(row,col+2,dic4['activePerCoverage'])
+                    worksheet.write(row,col+3,dic4['activeRate'])
+                    worksheet.write(row,col+4,dic4['activeRateBenchmarkH'])
+                    worksheet.write(row,col+5,dic4['activeRateBenchmarkL'])
+                    worksheet.write(row,col+6,dic4['coverage'])
+                    worksheet.write(row,col+7,dic4['coverageRate'])
+                    worksheet.write(row,col+8,dic4['coverageRateBenchmarkH'])
+                    worksheet.write(row,col+9,dic4['coverageRateBenchmarkL'])
+                    worksheet.write(row,col+10,dic4['ranking'])
+                    worksheet.write(row,col+11,dic4['typeRanking'])
+                    row +=1
+                    
+                    
+                workbook.close() 
+                print(j+'类的<--'+appname+"-->排名信息已收集完毕")
+        except:
+            pass
+            
+      
