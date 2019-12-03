@@ -1,0 +1,198 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Oct  1 14:36:34 2017
+
+@author: bingchen_2783
+"""
+import json,requests,xlsxwriter
+import ssl
+requests.packages.urllib3.disable_warnings()
+context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+context.verify_mode = ssl.CERT_NONE
+from lxml import etree
+import pandas as pd
+headers = {
+        
+        'Host':'itunes.apple.com',
+        'User-Agent':'iTunes/12.6.2 (Windows; Microsoft Windows 7 x64 Ultimate Edition Service Pack 1 (Build 7601); x64) AppleWebKit/7603.3008.0.3',
+        'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        #'Referer':'	https://search.itunes.apple.com/WebObjects/MZStore.woa/wa/search?submit=edit&mt=8&term=%E6%90%BA%E7%A8%8B',
+        'If-Modified-Since':'Thu, 21 Sep 2017 13:41:52 GMT',
+        'Accept-Language':'zh-cn',
+        'X-Apple-I-MD-RINFO':'17106176',
+        'X-Apple-Store-Front':'143465-19,32',
+        'X-Apple-Tz	':'28800',
+        'X-Apple-I-MD':'AAAABQAAABC3D88cbfVG33fWp/QUwLV2AAAAAg==',
+        'X-Apple-I-MD-M':'9NVGzDrzEcqKuuE2dYRaMZYz6wtnD0zthaIa07gT5O9TyMI8WwxdedfD2GhlgLXYlks0jfWgDvLbcG3G',
+        'Accept-Encoding':'gzip, deflate',
+        'Cookie':'groupingPillToken=1_iphone; xp_ab=1#isj11bm+-2+HuliAGF1#WqjkRLH+-2+t0giRjG3#Zh4zkDd+-2+gUmeAYN0; xp_abc=HuliAGF1#t0giRjG3; xp_ci=3z17m80hzH0Oz4hDzBc0zTFS1ajiV; itspod=32; mz_at0-11546739903=AwQAAAECAAHXGgAAAABdtTwe/l47EjdhmFMfp4jKlHr0Lwzc0Aw=; mz_at_ssl-11546739903=AwUAAAECAAHXGgAAAABdtTweSyJ2mL+KYk/62eJbLFli1rKGEZA=; pldfltcid=188015484d2e43c8a1afeb3d1574f1fc032; wosid-lite=HiYDijBVmDHq5SyD2rFEDg; X-Dsid=11546739903; geo=CN',
+        'Connection':'keep-alive'
+        }
+
+headers1 = {
+        
+        'Host':'apps.apple.com',
+        'User-Agent':'iTunes/12.6.2 (Windows; Microsoft Windows 7 x64 Ultimate Edition Service Pack 1 (Build 7601); x64) AppleWebKit/7603.3008.0.3',
+        'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        #'Referer':'	https://itunes.apple.com/WebObjects/MZStore.woa/wa/viewTop?id=29094&popId=30&genreId=6014',
+        #'If-Modified-Since':'Thu, 21 Sep 2017 13:41:52 GMT',
+        'Accept-Language':'zh-cn',
+        'X-Apple-I-MD-RINFO':'17106176',
+        'X-Apple-Store-Front':'143465-19,32',
+        'X-Daid':'11546739903',
+        'X-Apple-Tz	':'28800',
+        'X-Apple-I-MD':'AAAABQAAABBu5wcgAuOlmcQvbBbhYHNGAAAAAg==',
+        'X-Apple-I-MD-M':'9NVGzDrzEcqKuuE2dYRaMZYz6wtnD0zthaIa07gT5O9TyMI8WwxdedfD2GhlgLXYlks0jfWgDvLbcG3G',
+        'Accept-Encoding':'gzip, deflate',
+        'Cookie':'groupingPillToken=1_iphone; geo=CN; itspod=32; mz_at0-11546739903=AwQAAAECAAHXGgAAAABdy/a8BvXYRgq2Cy5qswFQGmdkZrQ/HSY=; mz_at_ssl-11546739903=AwUAAAECAAHXGgAAAABdy/a8I9V9/GV0fYa9/PZHMAHWpnBUF7w=; pldfltcid=188015484d2e43c8a1afeb3d1574f1fc032; X-Dsid=11546739903; xp_ab=1#isj11bm+-2+HuliAGF1#WqjkRLH+-2+t0giRjG3#Zh4zkDd+-2+gUmeAYN0; xp_abc=HuliAGF1#t0giRjG3; xp_ci=3z17m80hzH0Oz4hDzBc0zTFS1ajiV',
+        'Connection':'keep-alive'
+        }
+app_list = []
+sample = pd.read_excel('initial_sample.xlsx',sheet_name = 'overall',encoding = 'gbk').to_dict('records')
+for n in range(0,len(sample)):
+    app_list.append(sample[n]['应用ID'])
+#all_app_id = ['452186370']#替换ID即可
+for app_id_list in app_list:
+    url01 = "https://itunes.apple.com/lookup?cc=cn&id=" + str(app_id_list)
+    appname = requests.get(url = url01,verify=False).json()['results'][0]['trackName']
+    url2 = 'https://itunes.apple.com/cn/app/'+str(appname)+'/id'+str(app_id_list)
+    r = requests.get(url = url2,headers = headers1,verify=False)
+    try:
+        html1 = etree.HTML(r.text)
+        json_text1 = html1.xpath('//script/text()')[1][15:]
+    except:
+        pass
+    try:
+        app_name = json.loads(json_text1).get('storePlatformData').get('product-dv-product').get('results').get(app_id_list).get('nameSortValue')#获得APP的名字
+    except:
+        pass
+    try:
+        app_detail = json.loads(json_text1).get('storePlatformData').get('product-dv-product').get('results').get(app_id_list).get('description').get('standard')#获取APP的详细介绍
+    except:
+        pass
+    try:
+        company_name = json.loads(json_text1).get('storePlatformData').get('product-dv-product').get('results').get(app_id_list).get('artistName')#获得APP所属的企业
+    except:
+        pass
+    try:
+        released_time = json.loads(json_text1).get('storePlatformData').get('product-dv-product').get('results').get(app_id_list).get('releaseDate')#获得APP首次发布的时间
+    except:
+        pass
+    try:
+        user_rating_sorce = json.loads(json_text1).get('storePlatformData').get('product-dv-product').get('results').get(app_id_list).get('userRating').get('value')#获得APP的得分
+    except:
+        pass
+    try:
+        user_rating_num = json.loads(json_text1).get('storePlatformData').get('product-dv-product').get('results').get(app_id_list).get('userRating').get('ratingCount')#获得APP的评分人数
+    except:
+        pass
+    try:
+        user_current_rating_sorce = json.loads(json_text1).get('storePlatformData').get('product-dv-product').get('results').get(app_id_list).get('userRating').get('valueCurrentVersion')#获得APP当前版本的评分
+    except:
+        pass
+    try:
+        user_current_rating_num = json.loads(json_text1).get('storePlatformData').get('product-dv-product').get('results').get(app_id_list).get('userRating').get('ratingCountCurrentVersion')#获得APP当前版本的评分人数
+        app_subtitle = json.loads(json_text1).get('storePlatformData').get('product-dv-product').get('results').get(app_id_list).get('subtitle')#APP的标签
+        type_of_app = json.loads(json_text1).get('storePlatformData').get('product-dv-product').get('results').get(app_id_list).get('offers')[0].get('type')
+        price_of_app = json.loads(json_text1).get('storePlatformData').get('product-dv-product').get('results').get(app_id_list).get('offers')[0].get('priceFormatted')
+        app_also_buy = json.loads(json_text1).get('pageData').get('softwarePageData').get('customersAlsoBoughtApps')
+        version_history = json.loads(json_text1).get('pageData').get('softwarePageData').get('versionHistory')
+        more_app_by_this_developer = json.loads(json_text1).get('pageData').get('softwarePageData').get('moreByThisDeveloper')
+    except:
+        pass
+    
+    
+    dic = {
+            'APP的名字':app_name,
+            'APP的ID':app_id_list,
+            'APP的详细介绍':app_detail,
+            'APP所属公司':company_name,
+            'APP首次发布时间':released_time,
+            '用户总评分':user_rating_sorce,
+            '参与评分的总人数':user_rating_num,
+            '当前版本的评分':user_current_rating_sorce,
+            '当前版本评分的总人数':user_current_rating_num,
+            'APP的获得方式':type_of_app,
+            'APP的价格':price_of_app
+            }
+    workbook=xlsxwriter.Workbook(app_name+'.xlsx')
+    worksheet1=workbook.add_worksheet('基本信息')
+    title = ["项目","详细介绍"]
+    worksheet1.write_row('A1',title)
+    row = 1
+    col = 0
+    worksheet1.write(row,col,'APP的名字')
+    worksheet1.write(row,col+1,dic['APP的名字'])
+    worksheet1.write(row+1,col,'APP的ID')
+    worksheet1.write(row+1,col+1,dic['APP的ID'])
+    worksheet1.write(row+2,col,'APP的详细介绍')
+    worksheet1.write(row+2,col+1,dic['APP的详细介绍'])
+    worksheet1.write(row+3,col,'APP所属公司')
+    worksheet1.write(row+3,col+1,dic['APP所属公司'])
+    worksheet1.write(row+4,col,'APP首次发布时间')
+    worksheet1.write(row+4,col+1,dic['APP首次发布时间'])
+    worksheet1.write(row+5,col,'用户总评分')
+    worksheet1.write(row+5,col+1,dic['用户总评分'])
+    worksheet1.write(row+6,col,'参与评分的总人数')
+    worksheet1.write(row+6,col+1,dic['参与评分的总人数'])
+    worksheet1.write(row+7,col,'当前版本的评分')
+    worksheet1.write(row+7,col+1,dic['当前版本的评分'])
+    worksheet1.write(row+8,col,'当前版本评分的总人数')
+    worksheet1.write(row+8,col+1,dic['当前版本评分的总人数'])
+    worksheet1.write(row+9,col,'APP的获得方式')
+    worksheet1.write(row+9,col+1,dic['APP的获得方式'])
+    worksheet1.write(row+10,col,'APP的价格')
+    worksheet1.write(row+10,col+1,dic['APP的价格'])
+    name_list = []
+    try:
+        for app_also_buy1 in app_also_buy:
+            url3 = "https://itunes.apple.com/lookup?cc=cn&id=" + str(app_also_buy1)
+            rr = requests.get(url = url3,verify=False)
+            app_also_buy_name = rr.json()['results'][0]['trackName']
+            dic1 = {
+                    'also_buy_id':app_also_buy1,
+                    'app_also_buy_name':app_also_buy_name
+                    }
+            name_list.append(dic1)
+        worksheet2 = workbook.add_worksheet('相关产品')
+        title2 = ["alsobuyappID","alsoAPPname"]
+        worksheet2.write_row('A1',title2)
+        for name in name_list:
+            worksheet2.write(row,col,name['also_buy_id'])
+            worksheet2.write(row,col+1,name['app_also_buy_name'])
+            row+=1
+    except:
+        pass
+    worksheet3 = workbook.add_worksheet('版本历史')
+    title3 = ["版本号","发布时间","版本详情介绍"]
+    worksheet3.write_row('A1',title3)
+    row = row-15
+    for version in version_history:
+        worksheet3.write(row,col,version['versionString'])
+        worksheet3.write(row,col+1,version['releaseDate'])
+        worksheet3.write(row,col+2,version['releaseNotes'])
+        row+=1
+        #print('done')
+    alsodeveloperlist = []
+    try:
+        for moreapp in  more_app_by_this_developer:
+            url4 = "https://itunes.apple.com/lookup?cc=cn&id=" + str(moreapp)
+            rrr = requests.get(url = url4,verify=False)
+            alsodevelopename = rrr.json()['results'][0]['trackName']
+            dic2 ={'alsodevelop':moreapp,
+                   'alsodevelopename':alsodevelopename
+                   }
+            alsodeveloperlist.append(dic2)
+        row = 1
+        col = 0
+        worksheet4 = workbook.add_worksheet('开发商的更多的APP')
+        title4 = ["alsodevelopID","alsodevelopename"]
+        worksheet4.write_row('A1',title4)
+        for also in alsodeveloperlist:
+            worksheet4.write(row,col,also['alsodevelop'])
+            worksheet4.write(row,col+1,also['alsodevelopename'])
+            row+=1
+    except:
+        pass   
+    workbook.close()
+    print(appname+'已收集完毕')
