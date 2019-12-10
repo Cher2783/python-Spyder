@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Dec 10 12:06:18 2019
+
+@author: chan
+"""
+
+import requests
+import xlsxwriter
+from pyquery import PyQuery as pq
+headers = {
+         'Accept': 'application/json, text/plain, */*',
+    'Referer': 'https://m.weibo.cn/u/1595145397',
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Safari/605.1.15',
+    'X-Requested-With': 'XMLHttpRequest',
+    'Host':'m.weibo.cn'}
+Dic = []
+for i in range(1384,1723,1):
+    url = 'https://m.weibo.cn/api/container/getIndex?uid=1770545841&t=0&luicode=10000011&lfid=100103type%3D1%26q%3D%E5%BE%B7%E5%8F%A4%E6%8B%89%E8%88%B9%E9%95%BF&containerid=1076031770545841&page='+str(i)
+    #https://m.weibo.cn/api/container/getIndex?uid=1770545841&t=0&luicode=10000011&lfid=博主的userID&containerid=1076031770545841&page=20
+    p = requests.get(url = url,headers = headers)
+    cards = p.json()['data']['cards']
+    
+    for card in cards:
+        try:
+            if int(card['mblog']['textLength'])>140:
+                url1 = 'https://m.weibo.cn/statuses/extend?id='+str(card['mblog']['idstr'])
+                text = pq(requests.get(url = url1,headers = headers).json()['data']['longTextContent']).text()
+            else:
+                text = pq(card['mblog']['text']).text()
+            dic = {'creattime':card['mblog']['created_at'],
+                   'text':text,
+                   'textlength':card['mblog']['textLength'],
+                   'source':card['mblog']['source'],
+                    }
+            Dic.append(dic)
+        except:
+            pass
+    print(i)
+workbook=xlsxwriter.Workbook('德古拉船长2019'+'.xlsx')
+worksheet=workbook.add_worksheet()
+title = ["发博时间","文本","文本长度","发文使用手机"]
+worksheet.write_row('A1',title)
+row = 1
+col = 0
+
+for dic4 in Dic:
+    worksheet.write(row,col,dic4['creattime'])
+    worksheet.write(row,col+1,dic4['text'])
+    worksheet.write(row,col+2,dic4['textlength'])
+    worksheet.write(row,col+2,dic4['source'])
+    row +=1
+                
+                
+workbook.close() 
+print('信息已收集完毕')
